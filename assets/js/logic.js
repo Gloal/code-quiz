@@ -2,8 +2,13 @@
 const highscores = document.querySelector(".scores")
 const timer = document.querySelector("#time")
 const start = document.querySelector("#start")
+const startScreen = document.querySelector("#start-screen")
+const questionScreen = document.querySelector("#questions")
 
-let timeLeft = 0.0;
+
+let questionTitle = document.querySelector("#question-title")
+let questionChoices = document.querySelector("#choices")
+let score = 0;
 
 //import questions from questions.js
 
@@ -12,10 +17,7 @@ let timeLeft = 0.0;
 start.addEventListener("click", ()=>{
     timer.innerHTML = 01 + ":" + 00;
     console.log("Quiz button clicked!! start!")
-    document.querySelector("#start-screen").setAttribute("class","hide")
-    document.querySelector("#questions").setAttribute("class","start")
-
-
+    startScreen.setAttribute("class","hide")
     startTimer();
     loadQuestions();
 })
@@ -25,7 +27,7 @@ function startTimer() {
   let timeArray = presentTime.split(/[:]+/);
   let m = timeArray[0];
   let s = checkSecond((timeArray[1] - 1));
-  //if second is 50, decrement minute
+  //if second is 59, decrement minute
   if(s==59){m--}
   //if only 30s left, turn red and bold
   if(s<30 && m==0){timer.setAttribute("style", "color: red; font-size: 25px; font-weight: bold");}
@@ -44,8 +46,40 @@ function checkSecond(sec) {
 }
 
 function loadQuestions(){
+    questionScreen.setAttribute("class","start")
 
+    questionTitle.textContent = questions[1].question;
+    let questionChoicesList = document.createElement("ul");
+    questionChoices.appendChild(questionChoicesList);
+
+    for (let index = 0; index < questions[1].choices.length; index++) {
+        let choiceOption = document.createElement("li");
+        questionChoicesList.appendChild(choiceOption);
+        const element = questions[1].choices[index];
+        choiceOption.innerHTML = element.value;
+        choiceOption.addEventListener("click", function checkAnswer(event){
+            if(element.correct){
+                choiceOption.setAttribute("style","background-color: green");
+                score++;
+            }else{
+                choiceOption.setAttribute("style","background-color: red");
+                let presentTime = timer.innerHTML;
+                let timeArray = presentTime.split(/[:]+/);
+                let m = timeArray[0];
+                let s = checkSecond((timeArray[1] - 10));
+                if(s==59){m--}
+                if(s<30 && m==0){timer.setAttribute("style", "color: red; font-size: 25px; font-weight: bold");}
+                if(m < 0){ return }
+                
+                timer.innerHTML = m + ":" + s;
+            }
+            //display correct/incorrect
+            //add score / reduce time
+            //load next question
+        })
+    }
 }
+
 
 
 //if clicked start timer, remove p tag content - or remove div innerHTML
@@ -53,6 +87,7 @@ function loadQuestions(){
 //display question - unhide div #questions,
 //load question in #question-title
 //load choices in #choices as list
+//create a button for next question
 
 //check if answer is clicked
 //add click event listener to each list
@@ -61,13 +96,15 @@ function loadQuestions(){
 
 //if incorrect - display wrong, minus 10s then load next question
 
+//next button clicked - show next question. if last item, no next button
+
 //Show final score at the end
 
 //Ask user to enter initials then submit
 
 //once submitted - save to local storage - score and data
 
-//create the new local storage item - increment the score
+//create the new local storage item - add this score
 
 //organise the score from highest to lowest
 
