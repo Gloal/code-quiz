@@ -28,4 +28,5 @@ Once the time runs out or once the user finishes the questions, they are request
 ![Screenshot of quiz page](./assets/images/quiz-screenshot.png)
 ![Screenshot of high scores page](./assets/images/highscores-screenshot.png)
 
-##Deployed link:
+##Deployed link
+![Website]( https://gloal.github.io/code-quiz/)
