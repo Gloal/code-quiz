@@ -1,111 +1,149 @@
 //assign html attributes to variables
-const highscores = document.querySelector(".scores")
-const timer = document.querySelector("#time")
-const start = document.querySelector("#start")
-const startScreen = document.querySelector("#start-screen")
-const questionScreen = document.querySelector("#questions")
+const highscores = document.querySelector(".scores");
+const timer = document.querySelector("#time");
+const start = document.querySelector("#start");
+const startScreen = document.querySelector("#start-screen");
+const questionScreen = document.querySelector("#questions");
+const finishScreen = document.querySelector("#end-screen");
+const correctSound = new Audio("./assets/sfx/correct.wav");
+const incorrectSound = new Audio("./assets/sfx/incorrect.wav");
 
-
-let questionTitle = document.querySelector("#question-title")
-let questionChoices = document.querySelector("#choices")
+let questionTitle = document.querySelector("#question-title");
+let questionChoices = document.querySelector("#choices");
 let score = 0;
+let userInitial = document.querySelector("#initials");
+let allUserScores = JSON.parse(localStorage.getItem("scoreList")) || [];
+let isQuizNotEnded = true;
 
-//import questions from questions.js
-
-
-//check if start quiz button is clicked, start timer, hide div:#start, then display questions
-start.addEventListener("click", ()=>{
-    timer.innerHTML = 01 + ":" + 00;
-    console.log("Quiz button clicked!! start!")
-    startScreen.setAttribute("class","hide")
-    startTimer();
-    loadQuestions();
-})
+start.addEventListener("click", () => {
+  timer.innerHTML = 01 + ":" + 00;
+  console.log("Quiz button clicked!! start!");
+  startScreen.setAttribute("class", "hide");
+  startTimer();
+  let currentQuestionIndex = 0;
+  loadQuestion(currentQuestionIndex);
+});
 
 function startTimer() {
   let presentTime = timer.innerHTML;
   let timeArray = presentTime.split(/[:]+/);
-  let m = timeArray[0];
-  let s = checkSecond((timeArray[1] - 1));
-  //if second is 59, decrement minute
-  if(s==59){m--}
-  //if only 30s left, turn red and bold
-  if(s<30 && m==0){timer.setAttribute("style", "color: red; font-size: 25px; font-weight: bold");}
-  if(m < 0){ return }
-  
-  timer.innerHTML = m + ":" + s;
+  let m = parseInt(timeArray[0]);
+  let s = parseInt(timeArray[1]);
 
-  //countdown every second
+  //end Quiz if time runs out
+  if (m === 0 && s === 0) {
+    if (isQuizNotEnded) {
+      endQuiz();
+    }
+    return;
+  }
+
+  //if second is 59, decrement minute
+  if (s === 0) {
+    m--;
+    s = 59;
+  } else {
+    s--;
+  }
+  //if only 30s left, turn red and bold
+  if (s < 30 && m == 0) {
+    timer.setAttribute(
+      "style",
+      "color: red; font-size: 25px; font-weight: bold"
+    );
+  }
+  timer.innerHTML = m + ":" + s;
+  //repeat every second
   setTimeout(startTimer, 1000);
 }
 
-function checkSecond(sec) {
-  if (sec < 10 && sec >= 0) {sec = "0" + sec}; // add zero in front of numbers < 10
-  if (sec < 0) {sec = "59"};
-  return sec;
-}
+function loadQuestion(currentQuestionIndex) {
+  questionScreen.setAttribute("class", "start");
 
-function loadQuestions(){
-    questionScreen.setAttribute("class","start")
-
-    questionTitle.textContent = questions[1].question;
+  // displayQuestions();
+  if (currentQuestionIndex < questions.length) {
+    questionTitle.textContent = questions[currentQuestionIndex].question;
+    questionChoices.innerHTML = "";
+    console.log(questions[currentQuestionIndex].question);
     let questionChoicesList = document.createElement("ul");
     questionChoices.appendChild(questionChoicesList);
 
-    for (let index = 0; index < questions[1].choices.length; index++) {
-        let choiceOption = document.createElement("li");
-        questionChoicesList.appendChild(choiceOption);
-        const element = questions[1].choices[index];
-        choiceOption.innerHTML = element.value;
-        choiceOption.addEventListener("click", function checkAnswer(event){
-            if(element.correct){
-                choiceOption.setAttribute("style","background-color: green");
-                score++;
-            }else{
-                choiceOption.setAttribute("style","background-color: red");
-                let presentTime = timer.innerHTML;
-                let timeArray = presentTime.split(/[:]+/);
-                let m = timeArray[0];
-                let s = checkSecond((timeArray[1] - 10));
-                if(s==59){m--}
-                if(s<30 && m==0){timer.setAttribute("style", "color: red; font-size: 25px; font-weight: bold");}
-                if(m < 0){ return }
-                
-                timer.innerHTML = m + ":" + s;
-            }
-            //display correct/incorrect
-            //add score / reduce time
-            //load next question
-        })
+    for (
+      let index = 0;
+      index < questions[currentQuestionIndex].choices.length;
+      index++
+    ) {
+      console.log(index);
+      let choiceOption = document.createElement("button");
+      questionChoicesList.appendChild(choiceOption);
+      const element = questions[currentQuestionIndex].choices[index];
+      choiceOption.textContent = element.value;
+
+      choiceOption.addEventListener("click", function checkAnswer() {
+        if (element.correct) {
+          correctSound.play();
+          score++;
+          buttonClicked = false;
+          currentQuestionIndex++;
+          loadQuestion(currentQuestionIndex);
+        } else {
+          incorrectSound.play();
+          add10Seconds();
+          buttonClicked = false;
+          currentQuestionIndex++;
+          loadQuestion(currentQuestionIndex);
+        }
+      });
     }
+  } else {
+    if (isQuizNotEnded) {
+      endQuiz();
+    }
+    return;
+  }
 }
 
+function endQuiz() {
+  isQuizNotEnded = false;
+  questionScreen.setAttribute("class", "hide");
+  finishScreen.setAttribute("class", "start");
+  document.querySelector("#final-score").textContent = score;
 
+  //save user score and load highscores
+  const submit = document.querySelector("#submit");
+  submit.addEventListener("click", function () {
+    allUserScores.push({ user: userInitial.value, score: score });
+    console.log(allUserScores);
+    localStorage.setItem("scoreList", JSON.stringify(allUserScores));
+    window.location.href = "highscores.html";
+  });
+}
 
-//if clicked start timer, remove p tag content - or remove div innerHTML
+function add10Seconds() {
+  let presentTime = timer.innerHTML;
+  let timeArray = presentTime.split(/[:]+/);
+  let m = parseInt(timeArray[0]);
+  let s = parseInt(timeArray[1]);
 
-//display question - unhide div #questions,
-//load question in #question-title
-//load choices in #choices as list
-//create a button for next question
+  //if less than 10 secs - end Quiz
+  if (m === 0 && s <= 10) {
+    if (isQuizNotEnded) {
+      endQuiz();
+    }
+    return;
+  }
 
-//check if answer is clicked
-//add click event listener to each list
-
-//if correct - display correct, add score then load next question
-
-//if incorrect - display wrong, minus 10s then load next question
-
-//next button clicked - show next question. if last item, no next button
+  if (s < 10) {
+    m--;
+    s += 50;
+  } else {
+    s -= 10;
+  }
+  timer.innerHTML = m + ":" + s;
+}
 
 //Show final score at the end
-
 //Ask user to enter initials then submit
-
 //once submitted - save to local storage - score and data
-
 //create the new local storage item - add this score
-
 //organise the score from highest to lowest
-
-//
